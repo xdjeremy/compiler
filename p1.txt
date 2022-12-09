@@ -1,0 +1,4 @@
+int x = 3;
+double z = 4 + 3.75;
+cout << "Hello";
+cout << z;

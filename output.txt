@@ -1,1 +1,1 @@
-intx=9,y=8-3;cout<<x<<"\n"<<y;
+intx=5;if(x<5){cout<<x;}cout<<"Hello";

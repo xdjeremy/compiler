@@ -4,16 +4,15 @@
 #include <string.h>
 #include <ctype.h>
 
-
 using namespace std;
-
+//Code Provided by FavTutor for Lexical Analysis and modified to our needs
 bool isPunctuator(char ch)					//check if the given character is a punctuator or not
 {
     if (ch == ' ' || ch == '+' || ch == '-' || ch == '*' ||
         ch == '/' || ch == ',' || ch == ';' || ch == '>' ||
         ch == '<' || ch == '=' || ch == '(' || ch == ')' ||
         ch == '[' || ch == ']' || ch == '{' || ch == '}' ||
-        ch == '&' || ch == '|')
+        ch == '&' || ch == '|' )
         {
             return true;
         }
@@ -36,14 +35,15 @@ bool validIdentifier(char* str)						//check if the given identifier is valid or
     }										//if length is one, validation is already completed, hence return true
     else
     {
-    for (i = 1 ; i < len ; i++)						//identifier cannot contain special characters
-    {
-        if (isPunctuator(str[i]) == true)
+        for (i = 1 ; i < len ; i++)						//identifier cannot contain special characters
         {
-            return false;
+            if (isPunctuator(str[i]) == true)
+            {
+                return false;
+            }
         }
     }
-    }
+
     return true;
 }
 
@@ -74,7 +74,7 @@ bool isKeyword(char *str)						//check if the given substring is a keyword or no
         || !strcmp(str, "volatile") || !strcmp(str, "typedef")
         || !strcmp(str, "enum") || !strcmp(str, "const")
         || !strcmp(str, "union") || !strcmp(str, "extern")
-        || !strcmp(str,"bool"))
+        || !strcmp(str,"bool") || !strcmp(str,"cout"))
         {
             return true;
         }
@@ -96,7 +96,8 @@ bool isNumber(char* str)							//check if the given substring is a number or not
         if (numOfDecimal > 1 && str[i] == '.')
         {
             return false;
-        } else if (numOfDecimal <= 1)
+        }
+        else if (numOfDecimal <= 1)
         {
             numOfDecimal++;
         }
@@ -109,6 +110,46 @@ bool isNumber(char* str)							//check if the given substring is a number or not
             }
     }
     return true;
+}
+
+bool isReal(char* str)							//check if the given substring is a real number or not
+{
+    int i, len = strlen(str),numOfDecimal = 0, count = 0;
+    if (len == 0)
+    {
+        return false;
+    }
+    for (i = 0 ; i < len ; i++)
+    {
+        if (numOfDecimal > 1 && str[i] == '.')
+        {
+            count++;
+        }
+        else if (numOfDecimal <= 1)
+        {
+            numOfDecimal++;
+        }
+
+        if (str[i] != '0' && str[i] != '1' && str[i] != '2'
+            && str[i] != '3' && str[i] != '4' && str[i] != '5'
+            && str[i] != '6' && str[i] != '7' && str[i] != '8'
+            && str[i] != '9' && str[i] != '.'|| (str[i] == '-' && i > 0) || !(count > 1))
+            {
+                return false;
+            }
+    }
+    return true;
+}
+
+bool isLiteral(char* str)						//check if the given identifier is valid or not
+{
+    int i = 0,len = strlen(str);
+    if(str[i] == '\"' && str[len-1] == '\"')
+    {
+        return true;
+    }
+
+    return false;
 }
 
 char* subString(char* realStr, int l, int r)				//extract the required substring from the main string
@@ -128,55 +169,117 @@ char* subString(char* realStr, int l, int r)				//extract the required substring
 
 void parse(char* str)						//parse the expression
 {
+    std::ofstream output, key;
+    output.open("output.txt", ios_base::app);
+    if(!output.is_open())
+    {
+        cout << "File could not be opened!\n";
+        return;
+    }
+
+    key.open("key.txt", ios_base::app);
+    if(!key.is_open())
+    {
+        cout << "File could not be opened!\n";
+        return;
+    }
+
     int left = 0, right = 0;
     int len = strlen(str);
-    while (right <= len && left <= right) {
+    while (right <= len && left <= right)
+    {
         if (isPunctuator(str[right]) == false)			//if character is a digit or an alphabet
-            {
-                right++;
-            }
+        {
+            right++;
+        }
 
         if (isPunctuator(str[right]) == true && left == right)		//if character is a punctuator
-            {
+        {
             if (isOperator(str[right]) == true)
             {
-                std::cout<< str[right] <<" IS AN OPERATOR\n";
+                output << str[right];
+                key << str[right] <<" IS AN OPERATOR\n";
+            }
+            else if(str[right] != ' ' && str[right] != '\n')
+            {
+                output << str[right];
+                key<< str[right] <<" IS AN PUNCTUATOR\n";
             }
             right++;
             left = right;
-            } else if (isPunctuator(str[right]) == true && left != right
-                   || (right == len && left != right)) 			//check if parsed substring is a keyword or identifier or number
-            {
+        }
+        else if (isPunctuator(str[right]) == true && left != right || (right == len && left != right)) 			//check if parsed substring is a keyword or identifier or number
+        {
             char* sub = subString(str, left, right - 1);   //extract substring
 
+            if(int(sub[0]) == 0)
+            {
+                output.close();
+                if (output.is_open())
+                {
+                    cout << "Stream could not close!" << endl;
+                }
+                key.close();
+                if (key.is_open())
+                {
+                    cout << "Stream could not close!" << endl;
+                }
+                return;
+            }
+
             if (isKeyword(sub) == true)
-                        {
-                            cout<< sub <<" IS A KEYWORD\n";
-                        }
+            {
+                output << sub;
+                key << sub <<" IS A KEYWORD\n";
+            }
             else if (isNumber(sub) == true)
-                        {
-                            cout<< sub <<" IS A NUMBER\n";
-                        }
-            else if (validIdentifier(sub) == true
-                     && isPunctuator(str[right - 1]) == false)
-                     {
-                         cout<< sub <<" IS A VALID IDENTIFIER\n";
-                     }
-            else if (validIdentifier(sub) == false
-                     && isPunctuator(str[right - 1]) == false)
-                     {
-                         cout<< sub <<" IS NOT A VALID IDENTIFIER\n";
-                     }
+            {
+                output << sub;
+                key<< sub <<" IS A NUMBER\n";
+            }
+            else if (isReal(sub) == true)
+            {
+                output << sub;
+                key<< sub <<" IS A REAL NUMBER\n";
+            }
+            else if (isLiteral(sub) == true)
+            {
+                output << sub;
+                key << sub << " IS A LITERAL\n";
+            }
+            else if (validIdentifier(sub) == true && isPunctuator(str[right - 1]) == false)
+            {
+                output << sub;
+                key<< sub <<" IS A VALID IDENTIFIER\n";
+            }
+            else if (validIdentifier(sub) == false && isPunctuator(str[right - 1]) == false)
+            {
+                output << sub;
+                key<< sub <<" IS NOT A VALID IDENTIFIER\n";
+            }
 
             left = right;
-            }
+        }
     }
     return;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    char c[100] = "int m = n + 5";
-    parse(c);
+    std::ofstream ofs, ofs2;
+    ofs.open("output.txt", std::ofstream::out | std::ofstream::trunc);
+    ofs.close();
+    ofs2.open("key.txt", std::ofstream::out | std::ofstream::trunc);
+    ofs2.close();
+
+    char a[1000];
+    std::ifstream inFile;
+    inFile.open(argv[1]);
+
+    while(!inFile.eof())
+    {
+       inFile.getline(a, 1000, '\n');
+       parse(a);
+    }
     return 0;
 }

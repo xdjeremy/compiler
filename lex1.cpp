@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <vector>
 
-using namespace std;
 //Code Provided by FavTutor for Lexical Analysis and modified to our needs
 bool isPunctuator(char ch)					//check if the given character is a punctuator or not
 {
@@ -114,7 +114,7 @@ bool isNumber(char* str)							//check if the given substring is a number or not
 
 bool isReal(char* str)							//check if the given substring is a real number or not
 {
-    int i, len = strlen(str),numOfDecimal = 0, count = 0;
+    int i, len = strlen(str),numOfDecimal = 0, count = -1;
     if (len == 0)
     {
         return false;
@@ -133,10 +133,14 @@ bool isReal(char* str)							//check if the given substring is a real number or 
         if (str[i] != '0' && str[i] != '1' && str[i] != '2'
             && str[i] != '3' && str[i] != '4' && str[i] != '5'
             && str[i] != '6' && str[i] != '7' && str[i] != '8'
-            && str[i] != '9' && str[i] != '.'|| (str[i] == '-' && i > 0) || !(count > 1))
+            && str[i] != '9' && str[i] != '.'|| (str[i] == '-' && i > 0))
             {
                 return false;
             }
+        if (count >= 0)
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -169,18 +173,25 @@ char* subString(char* realStr, int l, int r)				//extract the required substring
 
 void parse(char* str)						//parse the expression
 {
-    std::ofstream output, key;
-    output.open("output.txt", ios_base::app);
+    std::ofstream output, key, outlex;
+    output.open("output.txt", std::ios_base::app);
     if(!output.is_open())
     {
-        cout << "File could not be opened!\n";
+        std::cout << "File could not be opened!\n";
         return;
     }
 
-    key.open("key.txt", ios_base::app);
+    key.open("key.txt", std::ios_base::app);
     if(!key.is_open())
     {
-        cout << "File could not be opened!\n";
+        std::cout << "File could not be opened!\n";
+        return;
+    }
+
+    outlex.open("outlex.txt", std::ios_base::app);
+    if(!outlex.is_open())
+    {
+        std::cout << "File could not be opened!\n";
         return;
     }
 
@@ -199,11 +210,13 @@ void parse(char* str)						//parse the expression
             {
                 output << str[right];
                 key << str[right] <<" IS AN OPERATOR\n";
+                outlex << str[right] << ',';
             }
             else if(str[right] != ' ' && str[right] != '\n')
             {
                 output << str[right];
                 key<< str[right] <<" IS AN PUNCTUATOR\n";
+                outlex << str[right] << ',';
             }
             right++;
             left = right;
@@ -217,12 +230,17 @@ void parse(char* str)						//parse the expression
                 output.close();
                 if (output.is_open())
                 {
-                    cout << "Stream could not close!" << endl;
+                    std::cout << "Stream could not close!\n";
                 }
                 key.close();
                 if (key.is_open())
                 {
-                    cout << "Stream could not close!" << endl;
+                    std::cout << "Stream could not close!\n";
+                }
+                outlex.close();
+                if (outlex.is_open())
+                {
+                    std::cout << "Stream could not close!\n";
                 }
                 return;
             }
@@ -231,31 +249,36 @@ void parse(char* str)						//parse the expression
             {
                 output << sub;
                 key << sub <<" IS A KEYWORD\n";
+                outlex << sub << ',';
             }
             else if (isNumber(sub) == true)
             {
                 output << sub;
                 key<< sub <<" IS A NUMBER\n";
+                outlex << "num,";
             }
             else if (isReal(sub) == true)
             {
                 output << sub;
                 key<< sub <<" IS A REAL NUMBER\n";
+                outlex << "real,";
             }
             else if (isLiteral(sub) == true)
             {
                 output << sub;
                 key << sub << " IS A LITERAL\n";
+                outlex << "literal,";
             }
             else if (validIdentifier(sub) == true && isPunctuator(str[right - 1]) == false)
             {
                 output << sub;
                 key<< sub <<" IS A VALID IDENTIFIER\n";
+                outlex << "id,";
             }
             else if (validIdentifier(sub) == false && isPunctuator(str[right - 1]) == false)
             {
-                output << sub;
                 key<< sub <<" IS NOT A VALID IDENTIFIER\n";
+                return;
             }
 
             left = right;
@@ -272,18 +295,20 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    std::ofstream ofs, ofs2;
+    std::ofstream ofs, ofs2, ofs3;
     ofs.open("output.txt", std::ofstream::out | std::ofstream::trunc);
     ofs.close();
     ofs2.open("key.txt", std::ofstream::out | std::ofstream::trunc);
     ofs2.close();
+    ofs3.open("outlex.txt", std::ofstream::out | std::ofstream::trunc);
+    ofs3.close();
 
     char a[1000];
     std::ifstream inFile;
     inFile.open(argv[1]);
     if(!inFile.is_open())
     {
-        cout << "File could not be opened!\n";
+        std::cout << "File could not be opened!\n";
         return 0;
     }
 

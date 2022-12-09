@@ -1,0 +1,1 @@
+int,id,=,num,;,if,(,id,<,num,),{,cout,<,<,id,;,},cout,<,<,literal,;,

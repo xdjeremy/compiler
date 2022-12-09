@@ -266,6 +266,12 @@ void parse(char* str)						//parse the expression
 
 int main(int argc, char **argv)
 {
+    if (std::string(argv[1]) == "integer" && argc < 2)
+    {
+        std::cout << "Argument not found. Execute program following this syntax: ./lex [filename]\n";
+        return 0;
+    }
+
     std::ofstream ofs, ofs2;
     ofs.open("output.txt", std::ofstream::out | std::ofstream::trunc);
     ofs.close();
@@ -275,6 +281,11 @@ int main(int argc, char **argv)
     char a[1000];
     std::ifstream inFile;
     inFile.open(argv[1]);
+    if(!inFile.is_open())
+    {
+        cout << "File could not be opened!\n";
+        return 0;
+    }
 
     while(!inFile.eof())
     {
